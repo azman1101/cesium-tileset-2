@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.91/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.91/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+    }
+
+    #cesiumContainer {
+      height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    // Your access token can be found at: https://cesium.com/ion/tokens
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4MWYwM2VjYS1mNmQ2LTQ3MTEtYjBhYi1kOTFjNzRjYjFkYmEiLCJpZCI6ODUyMzAsImlhdCI6MTY0Njg3NTc1NX0.eKY25OxNGtG9-0GzqOvRpVWokm9CrC8l15P7DUkAInY';
+
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrainProvider: Cesium.createWorldTerrain()
+    });
+
+    const tileset = viewer.scene.primitives.add(
+      new Cesium.Cesium3DTileset({
+        url: Cesium.IonResource.fromAssetId(870179),
+        // url: '/tileset.json',
+        loadSiblings: true,
+        preloadWhenHidden: true,
+        maximumScreenSpaceError: 0,
+      })
+    );
+
+    tileset.allTilesLoaded.addEventListener(function () {
+      console.log('All tiles inside screen are loaded');
+    });
+
+    tileset.loadProgress.addEventListener(function (numberOfPendingRequests, numberOfTilesProcessing) {
+      if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
+        console.log('Stopped loading');
+        return;
+      }
+      console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
+    });
+
+    (async () => {
+      try {
+        await tileset.readyPromise;
+        await viewer.zoomTo(tileset);
+
+        // Apply the default style if it exists
+        var extras = tileset.asset.extras;
+        if (
+          Cesium.defined(extras) &&
+          Cesium.defined(extras.ion) &&
+          Cesium.defined(extras.ion.defaultStyle)
+        ) {
+          tileset.style = new Cesium.Cesium3DTileStyle(extras.ion.defaultStyle);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+
+  </script>
+  </div>
+</body>
+
+</html>
